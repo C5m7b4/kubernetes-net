@@ -43,7 +43,87 @@ now we should play through the platform service Architecture presention:
 
 now we should play through the command service Architecture presentation:
 
-![alt commmand-architedture](images/02-command-acrhitecture.png)
+![alt commmand-architecture](images/02-command-acrhitecture.png)
 
 thats it for our introduction into what we are going to build, so let's commit this sad powerpoint work and get to writing some code.
 
+## branch 4
+
+let's get started by creating a few projects
+
+first lets check out version of .NET to make sure everything is cozy, so let's run
+
+```js
+dotnet --version
+```
+
+![alt dotnet-version](images/03-dotnet-version.png)
+
+for our first project, we are going to run this command
+
+```js
+dotnet new webapi -n PlatformService
+```
+
+now our folder structure should look something like this:
+
+![alt folder-structure](images/04-folder-structure.png)
+
+we can open that folder in vscode by typing
+
+```js
+code -r PlatformService
+```
+
+now when this opens, you may see a prompt like this:
+
+![alt prompt](images/05-install%20prompt.png)
+
+definately choose yes, becuase this will give you the ability to debug your applications with ease.
+
+now your folder structure inside of platform service should look like this:
+
+![alt platformservice-structure](images/06-platformservice-structure.png)
+
+the first thing we are going to do with this project is to delete the WeatherForecast.csl file and delete the Controller for that as well.
+
+let's open the PlatformService.csproj file so we can make sure that as we install our dependencies, that they actually get installed. This will be helpfull fo sure. So, let's install some dependencies:
+
+```js
+dotnet add package AutoMapper.Extensions.Microsoft.DependencyInjection
+dotnet add package Microsoft.EntityFrameworkCore
+dotnet add package Microsoft.EntityFrameworkCore.Design
+dotnet add package Microsoft.EntityFrameworkCore.InMemory
+dotnet add package Microsoft.EntityFrameworkCore.SqlServer
+```
+
+now your PlatformService.csproj should look like this:
+
+![alt packages](images/07-packages.png)
+
+just for clarity, i'll put the code here are well
+
+```js
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.10">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="6.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.10" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+  </ItemGroup>
+
+</Project>
+
+``
