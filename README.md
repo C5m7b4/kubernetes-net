@@ -43,5 +43,7 @@ now we should play through the platform service Architecture presention:
 
 now we should play through the command service Architecture presentation:
 
-![alte commmand-architedture](images/02-command-acrhitecture.png)
+![alt commmand-architedture](images/02-command-acrhitecture.png)
+
+thats it for our introduction into what we are going to build, so let's commit this sad powerpoint work and get to writing some code.
 
