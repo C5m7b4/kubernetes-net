@@ -37,11 +37,11 @@ Here we are going to take a look at slides 01 through 03. I am not a powerpoint 
 now we should play through the service architechture powerpoint presention:
 ![alt service-archiceture](images/01-service-architecture.png)
 
-now we should play through the platform service architecture presention:
+now we should play through the platform service Architecture presention:
 
 ![alt platform-service-architecture](images/02-platform-architecture.png)
 
-now we should play through the command service arhitecure presentation:
+now we should play through the command service Architecture presentation:
 
 ![alte commmand-architedture](images/02-command-acrhitecture.png)
 
