@@ -126,4 +126,87 @@ just for clarity, i'll put the code here are well
 
 </Project>
 
-``
+```
+
+## branch 5
+
+now, create a folder in the root of our project called Models and create a file inside of there called Platform.cs. This is what this file should look like. Its pretty straight forward
+
+as a side note, once your are in a class, you can add properties with the shortcut by just typing prop, and then you will get intellisence which will help you out.
+
+![alt shortcut](images/08-shortcut.png)
+
+```js
+namespace PlatformService.Models
+{
+  public class Platform
+  {
+    public int Id { get; set; }
+    public string? Name { get; set; }
+    public string? Publisher { get; set; }
+    public string? Cost { get; set; }
+  }
+}
+```
+
+now we are going to add some annotations to this, but we are going to get some squigglies, so let's take a look at how to fix those squigglies:
+
+![alt squigglies](images/09-squigglies.png)
+
+so, to fix this, just put the cursor inside of the offending word, and press ctrl-. and you will get some intellisense that will allow you to import the correct using statement that you need.
+
+![alt helpers](images/010-helpers.png)
+
+so, now our class should look like this:
+
+```js
+using System.ComponentModel.DataAnnotations;
+
+namespace PlatformService.Models
+{
+  public class Platform
+  {
+    [Key]
+    [Required]
+    public int Id { get; set; }
+    [Required]
+
+    public string? Name { get; set; }
+    [Required]
+    public string? Publisher { get; set; }
+    [Required]
+    public string? Cost { get; set; }
+  }
+}
+```
+
+now, we are going to create our DbContext. Create a folder in the root of the project called Data and add a file inside of that called AppDbContext.cs
+
+another shortcut that you can use is for creating constructors, so you just basically just type ctor and vscode will help you out. just press tab and vscode will automatically create a constructor for you.
+
+![alt ctor](images/011-ctor.png)
+
+```js
+using Microsoft.EntityFrameworkCore;
+using PlatformService.Models;
+
+namespace PlatformService.Data
+{
+  public class AppDbContext : DbContext
+  {
+    public AppDbContext(DbContextOptions<AppDbContext> opt) : base(opt)
+    {
+
+    }
+
+    public DbSet<Platform> Platforms { get; set; }
+  }
+}
+```
+
+then we need to wire this up on our Program.cs file
+
+```js
+builder.Services.AddDbContext<AppDbContext>(opt => opt.UseInMemoryDatabase("InMem"));
+```
+
