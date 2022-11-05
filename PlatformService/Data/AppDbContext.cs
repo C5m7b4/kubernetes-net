@@ -7,7 +7,7 @@ namespace PlatformService.Data
   {
     public AppDbContext(DbContextOptions<AppDbContext> opt) : base(opt)
     {
-
+      Console.WriteLine("constructor");
     }
 
     public DbSet<Platform> Platforms { get; set; }
