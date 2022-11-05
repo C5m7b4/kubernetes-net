@@ -934,3 +934,17 @@ im going to call it Docker env, then create another folder inside of that for ou
 make sure you use port 8080 as that is what we specified when we spun up our container.
 
 that should be good enough for now. YOu can create and test out the other two endpoints, but the point of all of this is to get to kubernetes. this was just a means to an end. so lets stop here and finally get on to kubernetes
+
+## branch 13
+
+kubernetes is a container orchestrator. it handles automatically restarting container even if they stop. it's often referred as k82 because of the number of letters
+
+there are two main types of users
+
+- developers
+- administrators
+
+we are to have basicaly containers and under that we will have pods
+
+here we are going to look at the kubernetes powerpoint
+
