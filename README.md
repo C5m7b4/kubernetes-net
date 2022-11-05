@@ -754,3 +754,152 @@ we can also see that our app is running on two different ports:
 let's take a look at our swagger documentation
 
 ![alt swagger](images/036-swagger.png)
+
+## branch 11
+
+make sure you have docker desktop running firstly:
+
+![alt docker-desktop](images/037-docker-desktop.png)
+
+now make sure to install the plugin into vscode
+
+![alt plugin](images/038-plugin.png)
+
+in the root of our project create a file called Dockerfile
+
+here is how i am finding the image:
+
+![alt find](images/039-find.png)
+
+![alt docker-hub](images/040-docker-hub.png)
+
+![alt tags](images/041-tags.png)
+
+```js
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-env
+
+WORKDIR /app
+
+COPY *.csproj ./
+
+RUN dotnet restore
+
+COPY . ./
+
+RUN dotnet publish -c Release -o out
+
+FROM mcr.microsoft.com/dotnet/aspnet:6.0
+
+WORKDIR /app
+
+COPY --from=build-env /app/out .
+
+ENTRYPOINT ["dotnet", "PlatformService.dll"]
+```
+
+make sure the filename matches with whats in the bin directory
+
+![alt dll](images/042-dll.png)
+
+now let's check our version of docker
+
+![alt docker-version](images/043-docker-version.png)
+
+let's now open up the Docker Desktop app and check to make sure that we have kubernetes enabled:
+
+![alt enable-kubernetes](images/044-enable-kubernetes.png)
+
+![alt enabled](images/045-running.png)
+
+now let's build our first docker file
+
+```js
+docker build -t c5m7b4/platformservice .
+```
+
+be sure to use your docker hub username instead of mine and don't forget the period at the end, because that is the directory that it need to look to to find the Dockerfile. now your bash is going to go crazy, so no worries there and after it finishes doing all its work, you should be able to see your new image:
+
+![alt image](images/046-image.png)
+
+and you should also be able to see it in the Docker Desktop app:
+
+![app image](images/047-docker-image.png)
+
+let's spin up our image and give it a test run
+
+```js
+docker run -p 8080:80 -d  c5m7b4/platformservice
+```
+
+![alt first-run](images/048-first-run.png)
+
+firstly, you should get a hash back letting us know our image is running, and you should also be able to see that the container is running in the Docker plugin in vscode. there are a few more things that we can do also
+
+```js
+docker ps
+```
+
+this will show us all running containers
+
+![alt running-containers](images/049-running-containers.png)
+
+if you want to see all containers that you might have that are not running, you can try this command
+
+```js
+docker ps -a
+```
+
+if you want to see all images that you've created
+
+```js
+docker images
+```
+
+you can also stop the container by using it's id
+
+```js
+docker stop 
+```
+
+sometimes it takes a little time to stop the container
+
+one thing to note is that if we run the container again using the same command as before:
+
+```js
+docker run -p 8080:80 -d  c5m7b4/platformservice
+```
+
+![alt two-containers](images/050-two-containers.png)
+
+notice that now, we have two of these containers.
+
+so let's run docker ps again and get the container id so we can stop it
+
+![alt second-container](images/051-second-container.png)
+
+```js
+docker stop 2224fc5941c3
+```
+
+so, to start a stopped container, use the id that was created for your
+
+```js
+docker start 2224fc5941c3
+```
+
+you can also use the plugin
+
+![alt remove](images/052-remove.png)
+
+now we are going to push our image up to docker hub. I'm not sure, but I think you have to do a docker login first, and then after that it should remember your credentials:
+
+```js
+docker push c5m7b4/platformservice
+```
+
+this will take a few minutes, but after it's finished, we can log into dockerhub and see our new image which we will need for kubernetes
+
+![alt docker-hub](images/053-docker-hub.png)
+
+
+next up, we'll test out our container
