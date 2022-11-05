@@ -503,3 +503,47 @@ and we should see this:
 
 we want to make sure that we are seeing the Seeding Data in our console.
 
+## branch 8
+
+now we are going to create some DTOs {Data Transformation Object}
+
+so, lets create another folder in the root of our project called Dtos and create a file inside of that called PlatformReadDto.cs
+
+```js
+namespace PlatformService.Dtos
+{
+  public class PlatformReadDto
+  {
+    public int Id { get; set; }
+
+    public string Name { get; set; }
+
+    public string Publisher { get; set; }
+
+    public string Cost { get; set; }
+  }
+}
+```
+
+now let's create another Dto called PlatformCreateDto.cs
+
+```js
+using System.ComponentModel.DataAnnotations;
+
+namespace PlatformService.Dtos
+{
+  public class PlatformCreateDto
+  {
+    [Required]
+    public string Name { get; set; }
+    [Required]
+    public string Publisher { get; set; }
+    [Required]
+    public string Cost { get; set; }
+  }
+}
+```
+
+so now we have our Dtos, but we need a way to map these to our model.
+let's commit what we have and in the next branch, we will create our mappers.
+
