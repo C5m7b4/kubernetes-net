@@ -901,5 +901,36 @@ this will take a few minutes, but after it's finished, we can log into dockerhub
 
 ![alt docker-hub](images/053-docker-hub.png)
 
-
 next up, we'll test out our container
+
+## branch 12
+
+let's find out what containers that we have that we can start up first
+
+```js
+docker ps -a
+```
+
+![alt available-containers](images/054-available-containers.png)
+
+now let's start our container up so we can test it
+
+```js
+docker start 6dcbea6544d9
+```
+
+you will see the container running in the Docker Desktop
+
+![alt running-container](images/055-running-container.png)
+
+lets now create a new folder in insomnia
+
+![alt new-folder](images/056-new-insomnia-folder.png)
+
+im going to call it Docker env, then create another folder inside of that for our PlatformService. Inside of that, create a new request called Get all Platforms
+
+![alt get-all-platforms](images/057-get-all-platforms.png)
+
+make sure you use port 8080 as that is what we specified when we spun up our container.
+
+that should be good enough for now. YOu can create and test out the other two endpoints, but the point of all of this is to get to kubernetes. this was just a means to an end. so lets stop here and finally get on to kubernetes
