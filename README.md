@@ -549,3 +549,35 @@ let's commit what we have and in the next branch, we will create our mappers.
 
 ## branch 9
 
+firstly, we need to register AutoMapper so in the Progam.cs file, we need to add this snippet:
+
+```js
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+```
+
+in the root of our project, we are going to create a new folder called Profiles and in there we are going to create a new file called PlatformProfiles.cs
+
+```js
+using AutoMapper;
+using PlatformService.Dtos;
+using PlatformService.Models;
+
+namespace PlatformService.Profiles
+{
+  public class PlatformProfile : Profile
+  {
+    public PlatformProfile()
+    {
+      // source -> target
+      CreateMap<Platform, PlatformReadDto>();
+      CreateMap<PlatformCreateDto, Platform>();
+    }
+  }
+}
+```
+
+now let's make sure we don't have any errors, so we'll do a run
+
+```js
+dotnet run
+```
