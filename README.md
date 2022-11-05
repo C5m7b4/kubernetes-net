@@ -407,3 +407,99 @@ obj
 
 ok, now we can commit this branch before we move on
 
+## branch 7
+
+now we are going to seed out in-memory database so create a file in the Data folder called PrepDb.cs
+
+let's just stub out the start of this file so we can add it to our Program.cs file:
+
+```js
+namespace PlatformService.Data
+{
+  public static class PrepDb
+  {
+    public static void PrepPopulation(IApplicationBuilder app, bool isProd)
+    {
+
+    }
+  }
+}
+```
+
+then in our Program.cs file, let's add this snippet just before the app.Run() command:
+
+```js
+PrepDb.PrepPopulation(app, app.Environment.IsProduction());
+```
+
+At first, our file looks like this:
+
+![alt prep-db](images/017-prep-db.png)
+
+so, lets get rid of that warning. go into the PlatformService.csproj file and commend out this line
+
+![alt comment](images/018-comment.png)
+
+now you wll see that this error will go away
+
+new this file should look like this:
+
+```js
+using PlatformService.Models;
+
+namespace PlatformService.Data
+{
+  public static class PrepDb
+  {
+    public static void PrepPopulation(IApplicationBuilder app, bool isProd)
+    {
+      using (var serviceScope = app.ApplicationServices.CreateScope())
+      {
+        SeedData(serviceScope.ServiceProvider.GetService<AppDbContext>(), isProd);
+      }
+    }
+
+    private static void SeedData(AppDbContext context, bool isProd)
+    {
+      if (!context.Platforms.Any())
+      {
+        Console.WriteLine("--> Seeding Data...");
+        context.Platforms.AddRange(
+          new Platform() { Name = "Dot Net", Publisher = "Microsoft", Cost = "Free" },
+          new Platform() { Name = "SQL Server Express", Publisher = "Microsoft", Cost = "Free" },
+          new Platform() { Name = "Kubernetes", Publisher = "Cloud Native Computing Foundation", Cost = "Free" }
+        );
+
+        context.SaveChanges();
+      }
+      else
+      {
+        Console.WriteLine("--> we already have data");
+      }
+    }
+  }
+}
+```
+
+now just for safety, lets run a build
+
+```js
+dotnet build
+```
+
+everything should be good. oh wait, i noticed we got a lot of nullable warnings so lets go back to our Platform.cs class in the models folder and remove the ? character
+
+![alt build](images/019-build.png)
+
+now let's run this command
+
+```js
+dotnet build
+```
+
+and we should see this:
+
+![alt seeding](images/020-seeding-data.png)
+
+we want to make sure that we are seeing the Seeding Data in our console.
+
