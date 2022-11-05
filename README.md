@@ -210,3 +210,200 @@ then we need to wire this up on our Program.cs file
 builder.Services.AddDbContext<AppDbContext>(opt => opt.UseInMemoryDatabase("InMem"));
 ```
 
+## branch 6
+
+now we are going to add our repository. let's create an interface in the data folder. make a file named IPlatformRepo.cs
+
+```js
+using PlatformService.Models;
+
+namespace PlatformService.Data
+{
+  public interface IPlatformRepo
+  {
+    bool SaveChanges();
+
+    IEnumerable<Platform> GetAllPlatforms();
+    Platform GetPlatformById(int id);
+    void CreatePlatform(Platform plat);
+  }
+}
+```
+
+now create the concrete class to inherit from out interface. Create a filed called PlatformRepo.cs in the data folder
+
+one thing you will notice right off, is that vscode is not happy with us:
+
+![alt interfaces](images/012-interfaces.png)
+
+we can use the same technique by putting the cursor inside of the word IPlatformRepo and pressing ctrl-. to get some intellisense:
+
+![alt implement-interface](images/013-implement-interface.png)
+
+after you click on implement interface, vscode will automatically stub out all of the methods that you need in order to fulfill the contract between the two.
+
+it should not look like this:
+
+```js
+using PlatformService.Models;
+
+namespace PlatformService.Data
+{
+  public class PlatformRepo : IPlatformRepo
+  {
+    public void CreatePlatform(Platform plat)
+    {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<Platform> GetAllPlatforms()
+    {
+      throw new NotImplementedException();
+    }
+
+    public Platform GetPlatformById(int id)
+    {
+      throw new NotImplementedException();
+    }
+
+    public bool SaveChanges()
+    {
+      throw new NotImplementedException();
+    }
+  }
+}
+```
+
+let's start to fill this file out. we should start with a constructor first. don't forget about the ctor shortcut
+
+let's look at a stub for this what we will use a lot in the upcoming exercises
+
+![alt context](images/014-context.png)
+
+to fix this, put the cursor in the _context word and press ctrl-. and select create private read-only field:
+
+![alt read-only](images/015-read-only.png)
+
+let's start at the bottom and fill out this class
+
+```js
+    public bool SaveChanges()
+    {
+      return (_context.SaveChanges() >= 0);
+    }
+```
+
+```js
+    public IEnumerable<Platform> GetAllPlatforms()
+    {
+      return _context.Platforms.ToList();
+    }
+```
+
+```js
+    public Platform GetPlatformById(int id)
+    {
+      var platform = _context.Platforms.FirstOrDefault(p => p.Id == id);
+      if (platform == null)
+      {
+        return new Platform { };
+      }
+      else
+      {
+        return platform;
+      }
+    }
+```
+
+```js
+    public void CreatePlatform(Platform plat)
+    {
+      if (plat == null)
+      {
+        throw new ArgumentNullException(nameof(plat));
+      }
+
+      _context.Platforms.Add(plat);
+    }
+```
+
+now our final PlatformRepo.cs should look like this:
+
+```js
+using PlatformService.Models;
+
+namespace PlatformService.Data
+{
+  public class PlatformRepo : IPlatformRepo
+  {
+    private readonly AppDbContext _context;
+
+    public PlatformRepo(AppDbContext context)
+    {
+      _context = context;
+    }
+    public void CreatePlatform(Platform plat)
+    {
+      if (plat == null)
+      {
+        throw new ArgumentNullException(nameof(plat));
+      }
+
+      _context.Platforms.Add(plat);
+    }
+
+    public IEnumerable<Platform> GetAllPlatforms()
+    {
+      return _context.Platforms.ToList();
+    }
+
+    public Platform GetPlatformById(int id)
+    {
+      var platform = _context.Platforms.FirstOrDefault(p => p.Id == id);
+      if (platform == null)
+      {
+        return new Platform { };
+      }
+      else
+      {
+        return platform;
+      }
+    }
+
+    public bool SaveChanges()
+    {
+      return (_context.SaveChanges() >= 0);
+    }
+  }
+}
+```
+
+inn order to be able to inject this into our constructors, we need to register this with our Program.cs file. This is an important step in the process:
+
+so, in Program.cs, add this little snippet of code:
+
+```js
+builder.Services.AddScoped<IPlatformRepo, PlatformRepo>();
+```
+
+now, just to keep things tidy, we are going to make sure that our project builds:
+
+```js
+dotnet build
+```
+
+now, you may see a warning here, but we'll take care of that later on:
+
+![alt build-error](images/016-build-error.png)
+
+before we commit this, we need to add some stuff to our gitignore, because right now there appears to be a lot of files to commit. first let's check to see where they are coming from:
+
+add this to the .gitignore file
+
+```js
+bin
+obj
+```
+
+ok, now we can commit this branch before we move on
+
