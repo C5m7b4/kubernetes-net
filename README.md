@@ -581,3 +581,176 @@ now let's make sure we don't have any errors, so we'll do a run
 ```js
 dotnet run
 ```
+
+## branch 10
+
+now we are going to create our controller for this app, so let's create a file called PlatformsController.cs in the Controllers folder.
+
+```js
+using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using PlatformService.Data;
+using PlatformService.Dtos;
+
+namespace PlatformService.Controllers
+{
+  [Route("api/Platforms")]
+  [ApiController]
+  public class PlatformsController : ControllerBase
+  {
+    private readonly IMapper _mapper;
+    private readonly IPlatformRepo _repo;
+
+    public PlatformsController(IPlatformRepo repo, IMapper mapper)
+    {
+      _repo = repo;
+      _mapper = mapper;
+    }
+
+    public ActionResult<IEnumerable<PlatformReadDto>> GetPlatforms()
+    {
+      Console.WriteLine("--> Getting Platforms");
+
+      var platformItem = _repo.GetAllPlatforms();
+
+      return Ok(_mapper.Map<IEnumerable<PlatformReadDto>>(platformItem));
+    }
+  }
+}
+```
+
+now let's test everythig out up to this point, so we'll run ths command
+
+```js
+dotnet run
+```
+
+now we can actually test our work finally. We are going to use insomnia to test our api. here is the link to the [app](https://insomnia.rest/) or you can just type insomnia app into your brower and find the download
+
+once that is loaded, we are going to go to the dashboard and create a new project:
+
+![alt create](images/012-create.png)
+
+![alt new](images/021-new.png)
+
+![alt kubernetes](images/022-kubernetes.png)
+
+now we have a clean slate to work with for this project
+
+let create a new folder for this project:
+
+![alt new-folder](images/023-new-folder.png)
+
+and we are going to call this new folder PlatformService
+
+now we are going to create a new request to test out our service:
+
+![alt new-request](images/024-new-request.png)
+
+now we need to figure out where our request needs to come from:
+
+![alt localhost](images/025-localhost.png)
+
+so, let's just fix this up by changing our ports, so open up Properties/luanchSettings.json and change the port to look like this:
+
+```js
+"applicationUrl": "https://localhost:5001;http://localhost:5000",
+```
+
+now let's re-run the application
+
+```js
+dotnet run
+```
+
+and we should see the ports change
+
+![alt new-ports](images/026-new-ports.png)
+
+now we are going to rename that request to 'Get all Platforms' and we are going to make it look like this:
+
+![alt platforms](images/027-platforms.png)
+
+we have our first successfull endpoint. let's move on shall we.
+
+now let's add an endpoint for getting a platform by it's id
+
+```js
+    [HttpGet("{id}",Name = "GetPlatformById")]
+    public ActionResult<PlatformReadDto> GetPlatformById(int id)
+    {
+      var platformItem = _repo.GetPlatformById(id);
+
+      if (platformItem != null)
+      {
+        return Ok(_mapper.Map<PlatformReadDto>(platformItem));
+      }
+      else
+      {
+        return NotFound();
+      }
+    }
+```
+
+let's spin it up and give that a try
+
+```js
+dotnet run
+```
+
+now in insomnia, let's test our request like this:
+
+![alt get-platform-by-id](images/028-get-platform-by-id.png)
+
+everything is working well, so we need one more endpoint, then on to docker and then on to kubernetes. so, let's add that final endpoint to create a new platform
+
+```js
+    [HttpPost]
+    public ActionResult<PlatformReadDto> CreatePlatform(PlatformCreateDto platformCreateDto)
+    {
+      var platformModel = _mapper.Map<Platform>(platformCreateDto);
+      _repo.CreatePlatform(platformModel);
+      _repo.SaveChanges();
+
+      var platformReadDto = _mapper.Map<PlatformReadDto>(platformModel);
+
+      return CreatedAtRoute(nameof(GetPlatformById), new { Id = platformReadDto.Id }, platformReadDto);
+    }
+```
+
+now let's test it out
+
+```js
+dotnet run
+```
+
+and in insomnia, let's create a test like this:
+one note, for this request, because it's going to be a post, we need to tell insomnia that we have a json body
+
+![alt json-body](images/029-json-body.png)
+
+![alt post](images/030-post.png)
+
+we can also look at the headers to see the location parameter
+
+![alt location](images/032-headers.png)
+
+now if we run our Get all Platforms again, we should see our new platform
+
+![alt get-all](images/031-get-all.png)
+
+before we wrap up this branch, let's take a look at debugging our app, as that is very important when things don't go as planned. To do this, let's look at the debug section of vscode.
+
+![alt debug-1](images/033-debug-1.png)
+
+hit the play button and run that endpoint in insomnia, and you should see the code break:
+
+![alt debug-2](images/034-debug-2.png)
+
+we can also see that our app is running on two different ports:
+
+![alt ports](images/035-ports.png)
+
+let's take a look at our swagger documentation
+
+![alt swagger](images/036-swagger.png)
