@@ -1397,3 +1397,74 @@ builder.Services.AddHttpClient<ICommandDataClient, CommandDataClient>();
 ```
 
 let's commit this, and in the next section, we will actually test all this out.
+
+## branch 18
+
+first let's inject our new service into the controller
+
+```js
+    public PlatformsController(IPlatformRepo repo, IMapper mapper, ICommandDataClient commandDataClient)
+    {
+      _repo = repo;
+      _mapper = mapper;
+      _commandDataClient = commandDataClient;
+    }
+```
+
+don't forget to add the create readonly field as well.
+
+then come down to the post and make it look like this
+
+```js
+    [HttpPost]
+    public async Task<ActionResult<PlatformReadDto>> CreatePlatform(PlatformCreateDto platformCreateDto)
+    {
+      var platformModel = _mapper.Map<Platform>(platformCreateDto);
+      _repo.CreatePlatform(platformModel);
+      _repo.SaveChanges();
+
+      var platformReadDto = _mapper.Map<PlatformReadDto>(platformModel);
+
+      try
+      {
+        await _commandDataClient.SendPlatformToCommand(platformReadDto);
+      }
+      catch (System.Exception ex)
+      {
+        Console.WriteLine($"--> Could not send synchronously: {ex.Message}");
+      }
+
+      return CreatedAtRoute(nameof(GetPlatformById), new { Id = platformReadDto.Id }, platformReadDto);
+    }
+```
+
+now let's check things out, so we do a dotnet build and then a dotnet run
+
+now let's open our CommandService application in another instance of vscode and do a dotnet run on it so they are both running. Now if we create a plaform in our PlatformService, it should alert the CommandService of the new platform.
+
+now that we have both of those up and running, let's go back to insomnia and create a platform and see what's happening here.
+
+![alt create-platform](images/080-create-platform.png)
+
+so, if we look at the console for our platform service, we should see this:
+
+![alt ok](images/081-ok.png)
+
+and if we look at the console of our CommandService, we should see this:
+
+![alt ok](images/082-ok.png)
+
+one thing to note here that i did notice, is that if you are having problems with the two talking, especially using https, this command might be helpful to run on both projects
+
+```js
+dotnet dev-certs https --trust
+```
+
+now if we kill the comand service and try to use the same endpoint, you will see that it's taking time.
+
+![alt waiting](images/083-waiting.png)
+
+it stil works, but here you can see that even though we specified asyn await, we still had to wait, and in our platformservice, we got this message:
+
+![alt failure](images/084-failure.png)
+
