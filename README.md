@@ -1468,3 +1468,57 @@ it stil works, but here you can see that even though we specified asyn await, we
 
 ![alt failure](images/084-failure.png)
 
+## branch 19
+
+let's get our command service running in kubernetes and setup our clusterip's for both:
+
+before we can get our command service running in kubernetes, we need to dockerize it and push the image up to docker hub.
+
+lets make sure that we are in our CommandService project and create a file in the root called Dockerfile:
+
+```js
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-env
+
+WORKDIR /app
+
+COPY *.csproj ./
+
+RUN dotnet restore
+
+COPY . ./
+
+RUN dotnet publish -c Release -o out
+
+FROM mcr.microsoft.com/dotnet/aspnet:6.0
+
+WORKDIR /app
+
+COPY --from=build-env /app/out .
+
+ENTRYPOINT ["dotnet", "CommandsService.dll"]
+```
+
+then let's open a terminal and type this command:
+
+```js
+docker build -t c5m7b4/commandservice .
+```
+
+then we'll push it up to docker hub
+
+```js
+docker push c5m7b4/commandservice
+```
+
+![alt docker-hub](images/085-docker-hub.png)
+
+we probably should have tested this before we pushed it, but we'll just do that now
+
+```js
+docker run -p 8080:80 c5m7b4/commandservice
+```
+
+we should see this:
+
+![alt command-service-running](images/086-command-service-running.png)
+
