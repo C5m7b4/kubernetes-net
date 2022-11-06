@@ -1522,3 +1522,66 @@ we should see this:
 
 ![alt command-service-running](images/086-command-service-running.png)
 
+let's go ahead and stop that service
+
+## branch 20
+
+now it's time to go back to our K8s project
+
+let's add this to the end of our platforms-depl.yaml file
+
+```js
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: platforms-clusterip-srv
+spec:
+  type: ClusterIP
+  selector:
+    app: platformservice
+  ports:
+  - name: platformservice
+    protocol: TCP
+    port: 80
+    targetPort: 80
+```
+
+we'll leave that be for the moment and we will create a new deployment for our commandsService, so create a file called commands-depl.yaml
+
+```js
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: commands-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: commandservice
+  template:
+    metadata:
+      labels:
+        app: commandservice
+    spec:
+      containers:
+        - name: commandservice
+          image: c5m7b4/commandservice:latest
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: commands-clusterip-srv
+spec:
+  type: ClusterIP
+  selector:
+    app: commandservice
+  ports:
+  - name: commandservice
+    protocol: TCP
+    port: 80
+    targetPort: 80
+```
+
+it's basically just copying the platforms-depl.yaml file and change the names over. pretty basic setup.
+
