@@ -948,3 +948,98 @@ we are to have basicaly containers and under that we will have pods
 
 here we are going to look at the kubernetes powerpoint
 
+## branch 14
+
+let's make sure our folder structure looks something like this. You probably won't have images or powerpoints, but you should at least have the PlatformService folder
+
+![alt structure](images/059-structure.png)
+
+we are going to create a new folder called K8S. this folder is just going to hold our kubernetes deploy files, so let's open that up in vscode
+
+we are going to do the first part of the powerpoint presention, so create a file called platforms-depl.yaml
+
+it also might help with this to install this plugin into vscode
+
+![alt yaml-plugin](images/060-yaml-plugin.png)
+
+```js
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: platforms-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: platformservice
+  template:
+    metadata:
+      labels:
+        app: platformservice
+    spec:
+      containers:
+        - name: platformservice
+          image: c5m7b4/platformservice:latest
+```
+
+this will basically deploy a container into a pod. spaced here are critical so we might run into some problems here, but we'll keep our fingers crossed as we move forward and test things out.
+
+now we are going to try to run our deployment file
+
+first, let's make sure that kubernetes is ready so run this command
+
+```js
+kubectl version --short
+```
+
+and you should see something like this:
+
+![alt kubernetes-version](images/061-kube-version.png)
+
+kubectl will be the command that we will use for everything kubernetes related as we will see in the near future.
+
+to deploy our container, we are going to run this command:
+
+```js
+kubectl apply -f platforms-depl.yaml
+```
+
+hopefully you will see this:
+
+![alt first-kubernetes-deployment](images/062-first-kubernetes-deployment.png)
+
+now let's check to see if this really worked or not
+
+```js
+kubectl get deployments
+```
+
+![alt deployments](images/063-deployments.png)
+
+at this point, depending on your computers specs, you may see that the ready column might have 0/1, so it might take a bit of time to spin all this up.
+
+let's take a look at our pods
+
+```js
+kubectl get pods
+```
+
+![alt pods](images/064-pods.png)
+
+also at this time, you might need to run this a few times, while waiting for all this to complete
+
+if you take a look at our docker plugin, you will see that we are up and running:
+
+![alt docker-plugin](images/065-docker-plugin.png)
+
+if we now go to our docker desktop, it should look like this:
+
+![alt docker-desktop](images/066-docker-desktop.png)
+
+you can also click on the platformservice and see what the logs look like:
+
+![alt logs](images/067-logs.png)
+
+notice our seeding data console log that we provided
+
+congrats, you just deployed your first kubernetes project
