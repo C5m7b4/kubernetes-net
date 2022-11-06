@@ -1158,3 +1158,149 @@ so now the ip that we need to test with is going to be the 31637 port, so let's 
 ![alt get-all-platforms](images/072-get-all-platforms.png)
 
 all right!!!! this all looks really good. congrats if you made it this far. the next steps is to create our command service and get these boys talking to each other synchronously and asynchronously
+
+## branch 16
+
+let go to a command line at the root of our project and run this command
+
+```js
+dotnet new webapi -n CommandsService
+```
+
+![alt new-project](images/073-new-project.png)
+
+now our folder stucture should look like so:
+
+![alt new-folder-structure](images/074-new-folder-structure.png)
+
+you will probably see this box pop up, so hit yes, so we can properyly debug this application
+
+![alt suggestion](images/075-suggestion.png)
+
+now let's open that in vscode and get started. open the CommandsService.csproj file so we can make sure that our dependencies that we are about to install do in fact show up.
+
+```js
+dotnet add package AutoMapper.Extensions.Microsoft.DependencyInjection
+dotnet add package Microsoft.EntityFrameworkCore
+dotnet add package Microsoft.EntityFrameworkCore.Design
+ dotnet add package Microsoft.EntityFrameworkCore.InMemory
+```
+
+so now our CommandsService.csproj file should look like this:
+
+```js
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.10">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="6.0.10" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+  </ItemGroup>
+
+</Project>
+
+```
+
+now, let's cleanup our project by removing the references to the weatherforcast
+
+now in the properties folder under launchSetting.json, let's change our ports so when we fire up both services, the ports dont conflict with each other:
+
+```js
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:34219",
+      "sslPort": 44322
+    }
+  },
+  "profiles": {
+    "CommandsService": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "applicationUrl": "https://localhost:6001;http://localhost:6000",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
+
+```
+
+now let's just make sure this will run 
+
+```js
+dotnet run
+```
+
+just make sure that everything is working ok.
+
+now let's create our first controller, so in the controllers folder create a file called PlatformsController.cs
+
+```js
+using Microsoft.AspNetCore.Mvc;
+
+namespace CommandsService.Controllers
+{
+  [Route("api/c/platforms")]
+  [ApiController]
+  public class PlatformsController : ControllerBase
+  {
+    public PlatformsController()
+    {
+
+    }
+
+    [HttpPost]
+    public ActionResult TestInboundConnection()
+    {
+      Console.WriteLine("--> Inbound Post # command service");
+      return Ok("Inbound test ok from platforms controller");
+    }
+  }
+}
+```
+
+now we are going to test this with insomnia:
+
+let's do a dotnet run command
+
+```js
+dotnet run
+```
+
+it should be running on port 6000
+
+![alt port-6000](images/076-port-6000.png)
+
+let'g go to insomnia and create folder for testing this out by creating a folder for the Command Service. Let's create a new request called 'Test inbound connection'
+
+![alt inbound-connection](images/078-inbound-connection.png)
+
+if we look at our console in vscode, we should see that we got that
+
+![alt inbound-received](images/079-inbound-received.png)
