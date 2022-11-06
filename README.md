@@ -1585,3 +1585,24 @@ spec:
 
 it's basically just copying the platforms-depl.yaml file and change the names over. pretty basic setup.
 
+## branch 21
+
+we need to update our platformservice so open that project up
+
+we need to let our production build know how to talk to the CommandService
+
+so in appsettings.json, add this entry:
+
+```js
+"CommandService": "http://commands-clusterip-srv:80/api/c/platforms"
+```
+
+now, since we have changes our image we need to rebuild and publish it again
+
+```js
+docker build -t c5m7b4/platformservice .
+```
+
+```js
+docker push c5m7b4/platformservice
+```
