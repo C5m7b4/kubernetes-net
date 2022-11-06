@@ -1304,3 +1304,96 @@ let'g go to insomnia and create folder for testing this out by creating a folder
 if we look at our console in vscode, we should see that we got that
 
 ![alt inbound-received](images/079-inbound-received.png)
+
+## branch 17
+
+let's go back to the PlatformService application in vscode and we'll make an inefficient way of comunicating between services.
+
+so, to test this out, we are going to create a new folder called SyncDataServices
+
+inside of that folder, we are going to create another folder called Http
+
+inside of here we are going to create an interface, so create a file called ICommandDataClient.cs
+
+```js
+using PlatformService.Dtos;
+
+namespace PlatformService.SyncDataServices.Http
+{
+  public interface ICommandDataClient
+  {
+    Task SendPlatformToCommand(PlatformReadDto plat);
+  }
+}
+```
+
+now we will create the concrete class to go with our interface so create a filed called CommandDataClient.cs in that same Http folder.
+
+```js
+using System.Text;
+using System.Text.Json;
+using PlatformService.Dtos;
+
+namespace PlatformService.SyncDataServices.Http
+{
+  public class CommandDataClient : ICommandDataClient
+  {
+    private readonly HttpClient _httpClient;
+    private readonly IConfiguration _config;
+
+    public CommandDataClient(HttpClient httpClient, IConfiguration config)
+    {
+      _httpClient = httpClient;
+      _config = config;
+    }
+
+    public async Task SendPlatformToCommand(PlatformReadDto plat)
+    {
+      var httpContent = new StringContent(
+        JsonSerializer.Serialize(plat),
+        Encoding.UTF8,
+        "application/json");
+
+      var response = await _httpClient.PostAsync("http://localhost:6000/api/c/platforms", httpContent);
+
+      if (response.IsSuccessStatusCode)
+      {
+        Console.WriteLine("--> Sync POST to CommandSerice was OK!");
+      }
+      else
+      {
+        Console.WriteLine("--> Sync POST to CommandService was NOT OK!");
+      }
+    }
+  }
+}
+```
+
+now we really dont like having that url hard-coded, so let's store that url in our config file. so go to the appsettings.Development.json file and add this into it:
+
+```js
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "CommandService": "http://localhost:6000/api/c/platforms"
+}
+
+```
+
+then let's replace the url call with our config variable
+
+```js
+var response = await _httpClient.PostAsync(_config["CommandService"], httpContent);
+```
+
+now to use this, we need to register this in our Program.cs file like so, and we can put this just below the repo stuff.
+
+```js
+builder.Services.AddHttpClient<ICommandDataClient, CommandDataClient>();
+```
+
+let's commit this, and in the next section, we will actually test all this out.
