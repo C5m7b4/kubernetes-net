@@ -1043,3 +1043,118 @@ you can also click on the platformservice and see what the logs look like:
 notice our seeding data console log that we provided
 
 congrats, you just deployed your first kubernetes project
+
+## branch 15
+
+you may notice some weirdness when you commit your changes and then checkout the master branch, but it will sort itself out.
+
+if it makes any difference, we can destroy and redeploy this like so:
+
+```js
+kubectl delete deployment platforms-depl
+```
+
+![alt destroy](images/068-destoy.png)
+
+and now docker desktop is empty
+
+```js
+kubectl get deployments
+```
+
+![alt no-deployments](images/069-no-deployments.png)
+
+lets now fire things back up
+
+```js
+kubectl apply -f platforms-depl.yaml
+```
+
+now things should look good in the vscode plugin and in Docker Desktop
+
+now we are going to create a node port so we can access this container from our local computer
+
+let's create a file in our K8S project called platforms-np-srv.yaml
+the np is for node port
+
+and it should look like this:
+
+```js
+apiVersion: v1
+kind: Service
+metadata: 
+  name: platformnpservice-srv
+spec:
+  type: NodePort
+  selector:
+    app: platformservice
+  ports:
+    - name: platformservice
+      protocol: TCP
+      port: 8070
+      targetPort: 80
+```
+
+i am going to experiment here a little bit and deviate from the tutorial, and I am going to try to use port 8070, because I normally have IIS running on my computer and it takes port 80, which was specified in the tutorial, but I want to test this out on port 8070. We'll see how that goes for me 🙈
+I'm pretty sure the port 80 if the port of the service and the port 8070 is the port for my computer, but I guess we'll find out when we test it out. easy fix, if that's not the case though.
+
+```js
+kubectl apply -f platforms-np-srv.yaml
+```
+
+lets make sure it is working
+
+```js
+kubectl get services
+```
+
+![alt services](images/070-services.png)
+
+let's get brave and test everything out now. so go back to insomnia, and we are going to create a new folder for our K8S and inside of that, create a new folder called PlatformService. then we are going to create a new test called Get all Platforms
+
+!!!!!!!!!!!!!!!!!!!!!
+disclaimer, I made a mistake. I though that the port 8070 was the one that i need to use but after some testing, i realized that this is the internal port, so we are going to delete this deployment, fix our mistake and then make it right.
+
+so in our platforms-np-srv.yaml file, make these changes
+
+```js
+apiVersion: v1
+kind: Service
+metadata: 
+  name: platformnpservice-srv
+spec:
+  type: NodePort
+  selector:
+    app: platformservice
+  ports:
+    - name: platformservice
+      protocol: TCP
+      port: 80
+      targetPort: 80
+```
+
+then let's remove our deployment
+
+```js
+kubectl delete service platformnpservice-srv
+```
+
+now our service should be gone, so let's recreate it the correct way
+
+```js
+kubectl apply -f platforms-np-srv.yaml
+```
+
+now let see what our services look like
+
+```js
+kubectl get services
+```
+
+![alt re-deploy](images/071-re-deploy.png)
+
+so now the ip that we need to test with is going to be the 31637 port, so let's setup insomnia like this:
+
+![alt get-all-platforms](images/072-get-all-platforms.png)
+
+all right!!!! this all looks really good. congrats if you made it this far. the next steps is to create our command service and get these boys talking to each other synchronously and asynchronously
