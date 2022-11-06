@@ -1606,3 +1606,96 @@ docker build -t c5m7b4/platformservice .
 ```js
 docker push c5m7b4/platformservice
 ```
+
+now we should be good to go
+
+## branch 22
+
+let check to see where we are at, so open up the K8s project
+
+```js
+kubectl get deployments
+```
+
+we only have one deployment so far
+
+![alt deployments](images/087-deployments.png)
+
+```js
+kubectl get pods
+```
+
+![alt pods](images/088-pods.png)
+
+```js
+kubectl get services
+```
+
+![alt services](images/089-services.png)
+
+```js
+kubectl apply -f platforms-depl.yaml
+```
+
+![alt deploy-platforms](images/090-deploy-platforms.png)
+
+now lets check our services
+
+```js
+kubectl get services
+```
+
+everything should match here
+
+we still need to force kubernetes to pull down the latest image, because although we created the service, it did not detect a change in our actual application
+
+```js
+kubectl rollout restart deployment platforms-depl
+```
+
+![alt restart](images/091-restart.png)
+
+now we should be set with that, so let's deploy our command service
+
+```js
+kubectl apply -f commands-depl.yaml
+```
+
+![alt commands-service](images/092-commands-service.png)
+
+now if we check our services
+
+```js
+kubectl get services
+```
+
+![alt services](images/093-services.png)
+
+
+now let check out deployments
+
+```js
+kubectl get deployments
+```
+
+![alt deployments](images/094-deployments.png)
+
+and now let's check our pods
+
+```js
+kubectl get pods
+```
+
+![alt pods](images/095-pods.png)
+
+all is looking pretty good so far.
+
+now if we go and look at our docker desktop
+
+![alt docker-desktop](images/096-docker-desktop.png)
+
+
+we can probably kill the two dead ones while we are at it
+
+but not it's time to actually test these puppies out.
+
