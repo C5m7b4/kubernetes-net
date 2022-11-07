@@ -1825,3 +1825,83 @@ kubectl get services --namespace=ingress-nginx
 
 notice we have a load balancer by default.
 
+## branch 25
+
+make sure that you are in the K8S project and create a new file called ingress-srv.
+
+this is going to be our routing file fron nginx to our services
+
+```js
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-srv
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/user-regex: 'true'
+spec:
+  rules:
+    - host: acme.com
+      http:
+        paths:
+          - path: /api/platforms
+            pathType: Prefix
+            backend:
+              service:
+                name: platforms-clusterip-srv
+                port:
+                  number: 80
+          - path: /api/c/platforms
+            pathType: Prefix
+            backend: 
+              service:
+                name: commands-clusterip-srv
+                port:
+                  number: 80
+
+```
+
+spacing is very critical here!!!!!
+
+since we used acme.com, we need to change our host file to that acme.com is associated with something
+
+my location is 
+
+```js
+C:\Windows\System32\drivers\etc
+```
+
+im going to add this line
+
+```js
+127.0.0.1 acme.com
+```
+
+also, if you are running IIS, then make sure to stop if for this
+
+
+now back in our K8S project, run this command
+
+```js
+kubectl apply -f ingress-srv.yaml
+```
+
+and we should see this:
+
+![alt created](images/112-created.png)
+
+now it's actually time to test the beast
+
+back to insomnia
+
+Im going to rename our PlatformService under the K8s to PlatformServer (Node Port)
+
+then create another folder called PlatformService (Nginx)
+
+let now create a new test:
+
+this time we are going to use acme.com
+
+![alt acme](images/113-acme-1.png)
+
+sweet, things are starting to come together. in the next section, we'll setup our sql server and then start to move on to rabbitmq for our message bus
