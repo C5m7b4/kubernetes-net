@@ -1744,3 +1744,84 @@ app.UseHttpsRedirection();
 we could comment this out, but then we would have to rebuild and re-push to docker hub, so we'll leave in the warnings for now.
 
 if you've made it this far, congrats, but there is a ton of more cool shit that we need to do
+
+## branch 24
+
+this is where we have come so far
+
+![alt progress](images/102-progress.png)
+
+and this is the next step:
+
+![alt next-step](images/103-next-step.png)
+
+we are going to setup the ingress nginx container as our gateway. the node port is good for testing, but not good for production.
+
+let's do a google search for ingress nginx
+
+and we want to find the one from kubernetes
+
+![alt ingress-nginx](images/104-ingress-nginx.png)
+
+here is the [link](https://github.com/kubernetes/ingress-nginx)
+
+then lets checkout the getting started section, and then the one about using docker desktop. we will probably have to explore a way for aws as well.
+
+```js
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.4.0/deploy/static/provider/aws/deploy.yaml
+```
+
+just for fun, type the url of this puppy into chrome and take a look at their yaml file. it's quite impressive.
+
+but i digress...
+
+let's but that whole thing in our clipboard, open up the K8S app because that is where we have been working with kubernetes. you don't actually have to do that, but I am trying to stay consistent
+
+im going to paste that into my terminal and let it do its thing. Its actually pretty fast. now if we look at our docker plugin:
+
+![alt docker-plugin](images/105-docker-plugin.png)
+
+and if we look at docker desktop, we are going to see a ton of new stuff
+
+![alt docker-desktop](images/106-docker-desktop.png)
+
+now if we run
+
+```js
+kubectl get deployments
+```
+
+![alt deployments](images/107-deployments.png)
+
+notice that we dont see nginx.same for pods. nginx is running in its own namespace, so let's take a look at what we have there
+
+```js
+kubectl get namespace
+```
+
+![alt namespaces](images/108-namespaces.png)
+
+so, what we can do it this:
+
+```js
+kubectl get pods --namespace=ingress-nginx
+```
+
+![alt nginx](images/109-nginx.png)
+
+notice how 2 of them completed. nginx goes through an initialize phase where it will create pods to create other pods so now if we look at docker desktop again
+
+![alt docker-desktop](images/110-docker-desktop.png)
+
+so, we can probably just get rid of the ones that have exited
+
+now if we look at the services:
+
+```js
+kubectl get services --namespace=ingress-nginx
+```
+
+![alt services](images/111-serices.png)
+
+notice we have a load balancer by default.
+
