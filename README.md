@@ -1905,3 +1905,99 @@ this time we are going to use acme.com
 ![alt acme](images/113-acme-1.png)
 
 sweet, things are starting to come together. in the next section, we'll setup our sql server and then start to move on to rabbitmq for our message bus
+
+## branch 26
+
+now we are going to setup our first sql server, and this is going to need some storage, so let's look to see what storeageclasses we already have
+
+```js
+kubectl get storageclass
+```
+
+![alt storeageclass](images/114-storeageclass.png)
+
+there are three types of classes
+
+- persistent volume claim
+- persistent volume
+- storeage class
+
+back in our K8S project, let's create a new file called local-pvc.yaml for local persistent volume
+
+```js
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mssql-claim
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 200Mi
+
+```
+
+this is our first basic setup and it will allow for persistent storage requesting 200 MB of storage. 
+
+now we type this command:
+
+```js
+kubectl apply -f local-pvc.yaml
+```
+
+as a note, if you have already done this, you can remove it and start from scratch by running this command:
+
+```js
+kubectl delete pvc mssql-claim
+```
+
+now we can see what we have by running this command
+
+```js
+kubeclt get pvc
+```
+
+![alt persistent-storage](images/115-persistent-storage.png)
+
+now if we run
+
+```js
+kubectl get pvc
+```
+
+we shoudl see this:
+
+![alt pvc](images/116-pvc.png)
+
+ok, for the next part, we are going to need to supply sql with an administrator password, so let's do some footwork first. let's check that we have not already stored a secret
+
+```js
+kubeclt get secrtes
+```
+
+hopefully you are seeing this
+
+![alt secrets](images/117-secrets.png)
+
+if for some reason, you are doing this series again for practice, you might see this:
+
+![alt existing-secrets](images/118-existing-secrets.png)
+
+you can remove this by using this command:
+
+```js
+kubectl delete secrets mssql
+```
+
+just trying to cover all the bases here. so now, we should be ready to get started. sorry for the long winded explanation.
+
+now let's store our sa password into a secret. Now, obviously, this is a terrible thing altogether, but we'll probably come back aroung to this:
+
+```js
+kubectl create secret generic mssql --from-literal=MSSQSL_SA_PASSWORD="pa55w0rd!" 
+```
+
+![alt create-secret](images/119-create-secret.png)
+
+now, i think we are ready to create our sql server so let's stop here for now.
