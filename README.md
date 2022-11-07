@@ -2682,3 +2682,50 @@ namespace CommandsService.Data
 ```
 
 now we are just going to run a dotnet build just to check
+
+## branch 34
+
+now we are going to create some Dtos, so create a folder  in the root of the project called Dtos. let's create our first file, PlatformReadDto.cs
+
+```js
+namespace CommandsService.Dtos
+{
+  public class PlatformReadDto
+  {
+    public int Id { get; set; }
+    public string Name { get; set; }
+  }
+}
+```
+
+now lets create the CommandReadDto.cs
+
+```js
+namespace CommandsService.Dtos
+{
+  public class CommandReadDto
+  {
+    public int Id { get; set; }
+    public string HowTo { get; set; }
+    public string CommandLine { get; set; }
+    public int PlatformId { get; set; }
+  }
+}
+```
+
+now we are going to create one called CommandCreateDto.cs
+
+```js
+using System.ComponentModel.DataAnnotations;
+
+namespace CommandsService.Dtos
+{
+  public class CommandCreateDto
+  {
+    [Required]
+    public string HowTo { get; set; }
+    [Required]
+    public string CommandLine { get; set; }
+  }
+}
+```
