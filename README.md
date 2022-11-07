@@ -2403,3 +2403,77 @@ using Microsoft.EntityFrameworkCore;
 ```
 
 that's quite a chunk, so in the next branch, we'll rebuild our image, and push it back up to docker hub and check to see if our migrations are working or not.
+
+## branch 31
+
+back in our PlatformService, let's do another build
+
+```js
+docker build -t c5m7b4/platformservice .
+```
+
+dont forget the period at the end. and then push it up to docker hub
+
+```js
+docker push c5m7b4/platformservice
+```
+
+now just double check docker hub and make sure everything is cool.
+
+now we need to update our kubernetes instance so it pulls down our latest version
+
+it doesnt matter what command prompt you do this from, so you don't have to go back to the K8s project to do this.
+
+```js
+kubectl get deployments
+```
+
+![alt deployments](images/135-deployments.png )
+
+we want to restart the platforms-depl
+
+```js
+kubectl rollout restart deployment platforms-depl
+```
+
+and now if you do
+
+```js
+kubectl get pods
+```
+
+you should see everything running. if for some reason, things are out of whack, like maybe you mispelled the password in the config, you can kill the deployment like this
+
+```js
+kubectl delete deployment platforms-depl
+```
+
+then fix your errors and redeploy
+
+now, if you look at the logs for the platformservice in docke desktop, you should be able to see the migrations in action:
+
+![alt migrations](images/136-migrations.png)
+
+now just to really check, open up ssms and take a look at our database
+
+![alt db](images/137-db.png)
+
+![alt seeded-data](images/138-seeded-data.png)
+
+now back to insomnia using the K8s version we can go a get all platforms
+
+![alt get-all-platforms](images/139-get-all-platforms.png)
+
+now let's create a platform
+
+![alt create-platform](images/140-create-platform.png)
+
+and now recheck our platforms again
+
+![alt get-all-platforms](images/141-get-all-platforms.png)
+
+now we'll check sql
+
+![alt data](images/142-data.png)
+
+there you go. we have come a long way so far, but much more to come
