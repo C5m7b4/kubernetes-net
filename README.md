@@ -2296,3 +2296,110 @@ builder.Services.AddScoped<IPlatformRepo, PlatformRepo>();
 
 let's test everything out and make sure everybody is happy, so do a dotnet run command and just make sure that you are not getting any errors.
 after this, we are ready to start setting up some migrations
+
+## branch 30
+
+before we start with migrations, we need to make a small change to our propdb.cs file, so in the DataFolder, open up PropDb.cs, and make this small change:
+
+```js
+      if (isProd)
+      {
+        Console.WriteLine("--> Attempting to apply migrations");
+        try
+        {
+          context.Database.Migrate();
+        }
+        catch (Exception ex)
+        {
+          Console.WriteLine($"--> could not run migrations: {ex.Message}");
+        }
+      }
+```
+
+we are going to have to comment out the line for migration because we are not totally there yet
+
+now, it's time to setup our migrations: open up a command prompt and type
+
+```js
+dotnet ef migrations add initialmigration
+```
+
+and we get this lovely message:
+
+![alt failed-migrations](images/130-failed-migrations.png)
+
+there are a couple of work-arounds for this. Basically, this is just telling us that it has no idea what ef it, and this is something that Microsoft changed in .net 6, so let's run these commands:
+
+```js
+dotnet new tool-manifest
+dotnet tool install --local dotnet-ef --version 6.0.10
+```
+
+![alt add-ef](images/131-add-ef.png)
+
+![alt add tool](images/132-add-tool.png)
+
+let's try the migrations one more time, but this time the command will change a little bit
+
+```js
+dotnet dotnet-ef migrations add initialmigration
+```
+
+now you are going to get a bunch of nasty error, so there is still a little work that needs to be done. the problem here is the the inMemory database does not support migrations, so we need to fake things out in order to get this up and running
+
+```js
+// if (builder.Environment.IsDevelopment())
+// {
+//   Console.WriteLine("--> running in developement mode");
+//   builder.Services.AddDbContext<AppDbContext>(opt =>
+//       opt.UseInMemoryDatabase("InMem"));
+// }
+// else
+// {
+  Console.WriteLine("--> running in production mode");
+  builder.Services.AddDbContext<AppDbContext>(opt =>
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("PlatformsConn")));
+// }
+```
+
+basically, we are just telling our app that we are only using a real sql database. and this is just to get our migrations started.
+
+and comment out this line as well
+
+```js
+// PrepDb.PrepPopulation(app, app.Environment.IsProduction());
+```
+
+we are also going to need to copy our connection string from the appsettings.json and past it in our appsettings.Development.json, and make a small change
+
+```js
+  "ConnectionStrings": {
+    "PlatformsConn": "Server=localhost,1433;Initial Catalog=platformsdb;User Id=sa;Password=pa55w0rd!"
+  }
+```
+
+that should be enough to get our migrations working
+
+```js
+dotnet dotnet-ef migrations add initialmigration
+```
+
+![alt migrations](images/133-migrations.png)
+
+now there should be a new folder called migrations with 3 files in it:
+
+![alt migrations-folder](images/134-migrations-folder.png)
+
+now let's roll back the things that we commented out to get the migrations to work. also dont forget to go back to PrepDb in our Data folder and remove the comment on this line:
+
+```js
+context.Database.Migrate();
+```
+
+you may also have to import 
+
+```js
+using Microsoft.EntityFrameworkCore;
+```
+
+that's quite a chunk, so in the next branch, we'll rebuild our image, and push it back up to docker hub and check to see if our migrations are working or not.
