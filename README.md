@@ -2259,3 +2259,40 @@ shortly after we kill it, it will respawn, and after it comes back, we will log 
 
 yep, still there. let's delete it because we don't need it. in the next branch, we'll update the platform service to actually use this sql server.
 
+## branch 29
+
+let's open back up our PlatformService app and get it ready to connect to our sql server when in production mode. in dev mode, we'll still use the inMemory database though.
+
+open up the appsettings.json file and add this line:
+
+```js
+  "ConnectionStrings": {
+    "PlatformsConn": "Server=mssql-clusterip-srv,1433;Initial Catalog=platformsdb;User Id=sa;Password=pa55w0rd!"
+  }
+```
+
+now we need a conditional statement in our Program.cs to decide which database to use when in development vs production. If you are watching the youtube video, it's using .net5 and we are using .net6 which is a little different, so i had to figure a different way to do this, so, in our Program.cs file, we'll add this code:
+
+```js
+if (builder.Environment.IsDevelopment())
+{
+  Console.WriteLine("--> running in developement mode");
+  builder.Services.AddDbContext<AppDbContext>(opt =>
+      opt.UseInMemoryDatabase("InMem"));
+}
+else
+{
+  Console.WriteLine("--> running in production mode");
+  builder.Services.AddDbContext<AppDbContext>(opt =>
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("PlatformsConn")));
+}
+```
+
+we are going to put that before this line:
+
+```js
+builder.Services.AddScoped<IPlatformRepo, PlatformRepo>();
+```
+
+let's test everything out and make sure everybody is happy, so do a dotnet run command and just make sure that you are not getting any errors.
+after this, we are ready to start setting up some migrations

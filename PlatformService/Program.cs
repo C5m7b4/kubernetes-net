@@ -6,7 +6,22 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddDbContext<AppDbContext>(opt => opt.UseInMemoryDatabase("InMem"));
+// builder.Services.AddDbContext<AppDbContext>(opt => opt.UseInMemoryDatabase("InMem"));
+
+if (builder.Environment.IsDevelopment())
+{
+  Console.WriteLine("--> running in developement mode");
+  builder.Services.AddDbContext<AppDbContext>(opt =>
+      opt.UseInMemoryDatabase("InMem"));
+}
+else
+{
+  Console.WriteLine("--> running in production mode");
+  builder.Services.AddDbContext<AppDbContext>(opt =>
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("PlatformsConn")));
+}
+
+
 builder.Services.AddScoped<IPlatformRepo, PlatformRepo>();
 builder.Services.AddHttpClient<ICommandDataClient, CommandDataClient>();
 builder.Services.AddControllers();
