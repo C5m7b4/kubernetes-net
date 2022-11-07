@@ -2001,3 +2001,157 @@ kubectl create secret generic mssql --from-literal=MSSQSL_SA_PASSWORD="pa55w0rd!
 ![alt create-secret](images/119-create-secret.png)
 
 now, i think we are ready to create our sql server so let's stop here for now.
+
+## branch 27
+
+now, we are back in our K8S project, we are going to create a new file called mssql-plat-depl.yaml
+
+```js
+apiVersion: apps/v1
+type: Deployment
+metadata:
+  name: mssql-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mssql
+  template:
+    metadata:
+      labels:
+        app: mssql
+    spec:
+      containers:
+        - name: mssql
+          image: mcr.microsoft.com/mssql/server:2017-latest
+          ports:
+            - containerPort: 1433
+          env:
+          - name: MSSQL_PID
+            value: "Express"
+          - name: ACCEPT_EULA
+            value: "Y"
+          - name: MSSQL_SA_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mssql
+                key: MSSQL_SA_PASSWORD
+          volumeMounts:
+          - mountPath: /var/opt/mssql/data
+            name: mssqldb
+      volumes:
+      - name: mssqldb
+        persistentVolumeClaim:
+          claimName: mssql-claim
+
+```
+
+this is our basic setup, but we also have to add the networking, so we can copy the settings from our commands-depl.yaml file. we will copy the cluster section and make some neccessary changes:
+
+```js
+---          
+apiVersion: v1
+kind: Service
+metadata:
+  name: mssql-clusterip-srv
+spec:
+  type: ClusterIP
+  selector:
+    app: mssql
+  ports:
+  - name: mssql
+    protocol: TCP
+    port: 1433
+    targetPort: 1433
+```
+
+i really want to play with these ports because I have sql server running on my laptop, and i would like to find a way to have these not interfere with each other, so we may need to play with this a little bit, but let's just get all this up and running and then we can look into making this our bitch.
+
+now we want to be able to connect to this from our local laptop, so we'll add a load balancer
+
+```js
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mssql-loadbalancer
+spec:
+  type: LoadBalancer
+  selector:
+    app: mssql
+  ports:
+    - protocol: TCP
+      port: 1433
+      targetPort: 1433   
+```
+
+so our whole file should look like this:
+
+```js
+apiVersion: apps/v1
+type: Deployment
+metadata:
+  name: mssql-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mssql
+  template:
+    metadata:
+      labels:
+        app: mssql
+    spec:
+      containers:
+        - name: mssql
+          image: mcr.microsoft.com/mssql/server:2017-latest
+          ports:
+            - containerPort: 1433
+          env:
+          - name: MSSQL_PID
+            value: "Express"
+          - name: ACCEPT_EULA
+            value: "Y"
+          - name: MSSQL_SA_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mssql
+                key: MSSQL_SA_PASSWORD
+          volumeMounts:
+          - mountPath: /var/opt/mssql/data
+            name: mssqldb
+      volumes:
+      - name: mssqldb
+        persistentVolumeClaim:
+          claimName: mssql-claim
+---          
+apiVersion: v1
+kind: Service
+metadata:
+  name: mssql-clusterip-srv
+spec:
+  type: ClusterIP
+  selector:
+    app: mssql
+  ports:
+  - name: mssql
+    protocol: TCP
+    port: 1433
+    targetPort: 1433
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mssql-loadbalancer
+spec:
+  type: LoadBalancer
+  selector:
+    app: mssql
+  ports:
+    - protocol: TCP
+      port: 1433
+      targetPort: 1433    
+```
+
+alright, lot's to process here. Let's stop here and when we come back, we'll spint this baby up.
+
