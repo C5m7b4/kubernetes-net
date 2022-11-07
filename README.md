@@ -2477,3 +2477,75 @@ now we'll check sql
 ![alt data](images/142-data.png)
 
 there you go. we have come a long way so far, but much more to come
+
+## branch 32
+
+now we are going to fledge out our commandsservice to make it more real
+
+so, let's open up the commandsService project and create a new folder called Models
+
+we will create our first model inside that folder called Platform.cs
+
+```js
+namespace CommandsService.Models
+{
+  public class Platforms
+  {
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public int ExternalId { get; set; }
+  }
+}
+```
+
+the next model we will create is our Command.cs file
+
+```js
+using System.ComponentModel.DataAnnotations;
+
+namespace CommandsService.Models
+{
+  public class Command
+  {
+    [Key]
+    [Required]
+    public int Id { get; set; }
+    [Required]
+    public string HowTo { get; set; }
+    [Required]
+    public string CommandLine { get; set; }
+    [Required]
+    public int PlatformId { get; set; }
+    public Platform Platform { get; set; }
+  }
+}
+```
+
+one thing I'm going to change about this project is in the CommandsService.csproj file
+
+```js
+<!-- <Nullable>enable</Nullable> -->
+```
+
+now back over to our Platform class, we will add this:
+
+```js
+using System.ComponentModel.DataAnnotations;
+
+namespace CommandsService.Models
+{
+  public class Platform
+  {
+    [Key]
+    [Required]
+    public int Id { get; set; }
+    [Required]
+    public string Name { get; set; }
+    [Required]
+    public int ExternalId { get; set; }
+
+    public ICollection<Command> Commands { get; set; } = new List<Command>();
+  }
+```
+
+now let's just do a dotnet build to make sure everything is kosher
