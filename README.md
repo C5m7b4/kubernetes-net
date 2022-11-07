@@ -2729,3 +2729,37 @@ namespace CommandsService.Dtos
   }
 }
 ```
+
+## branch 35
+
+now it's time for automapper
+
+let's open up the Program.cs file and add this under AddControllers
+
+```js
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+```
+
+now we create the folder called Profiles and create a file in there called CommandsProfile.cs
+
+```js
+using AutoMapper;
+using CommandsService.Dtos;
+using CommandsService.Models;
+
+namespace CommandsService.Profiles
+{
+  public class CommandsProfile : Profile
+  {
+    public CommandsProfile()
+    {
+      // source => target
+      CreateMap<Platform, PlatformReadDto>();
+      CreateMap<CommandCreateDto, Command>();
+      CreateMap<Command, CommandReadDto>();
+    }
+  }
+}
+```
+
+that's it for our automapper
