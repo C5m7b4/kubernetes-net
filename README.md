@@ -2008,7 +2008,7 @@ now, we are back in our K8S project, we are going to create a new file called ms
 
 ```js
 apiVersion: apps/v1
-type: Deployment
+kind: Deployment
 metadata:
   name: mssql-depl
 spec:
@@ -2148,10 +2148,114 @@ spec:
   selector:
     app: mssql
   ports:
-    - protocol: TCP
-      port: 1433
-      targetPort: 1433    
+  - protocol: TCP
+    port: 1433
+    targetPort: 1433    
 ```
 
 alright, lot's to process here. Let's stop here and when we come back, we'll spint this baby up.
+
+## branch 28
+
+now let's deploy this thing:
+
+```js
+kubectl apply -f mssql-plat-depl.yaml
+```
+
+cross your fingers
+
+![alt sql-deploy](images/120-sql-deploy.png)
+
+now lets run this command
+
+```js
+kubectl get services
+```
+
+![alt services](images/121-services.png)
+
+and if we do a 
+
+```js
+kubectl get pods
+```
+
+![alt pods](images/122-pods.png)
+
+here we have an error, so we are going to try to figure out why that is. this is not a bad thing, these yaml files are a bitch.
+
+i verified the yaml file is good, so pretty sure that this is a secrets problem. let's tear down the deployment with 
+
+```js
+kubectl delete deployment mssql-depl
+```
+
+now let's clear out our secret
+
+```js
+kubectl delete secret mssql
+```
+
+and make sure they are cleared
+
+```js
+kubectl get secrets
+```
+
+redo our secret
+
+```js
+kubectl create secret generic mssql --from-literal=MSSQL_SA_PASSWORD="pa55w0rd!"
+```
+
+redploy our yaml file
+
+```js
+kubectl apply -f mssql-plat-depl.yaml
+```
+
+now let's check everything out
+
+```js
+kubectl get deployments
+```
+
+![alt deployments](images/123-deployments.png)
+
+looks good, now let's check our pods
+
+```js
+kubectl get pods
+```
+
+![alt pods](images/124-pods.png)
+
+sweet jesus!!!!!
+
+OK, let's try to login to our sql server. You will need to bring up SQL Server Managment Studio. If you do not have it, you can get it [here](https://learn.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-ver16)
+
+try to connect up using this:
+
+![alt sql-login](images/125-sql-login.png)
+
+the login seems weird, it actually localhost,1433. I think we need to try and play with using different external ports, so we can actually run multiples of these, but for not, this should be find. also, if you are running sql on your local machine, shut it down because they will conflict because of the port. work in progress I guess, but still learning, so this will have to do for now.
+
+we were able to login, but there are no databases yet:
+
+![alt server](images/126-server.png)
+
+but we can test the persistent storage by creating a database just as a test
+
+![alt test-db](images/127-test-db.png)
+
+now, we can close out of SSMS, and go to Docker Desktop and find our mssql instance and kill it:
+
+![alt mssql](images/128-mssql.png)
+
+shortly after we kill it, it will respawn, and after it comes back, we will log in again and make sure out test database is still there.
+
+![alt test-db](images/129-test-db.png)
+
+yep, still there. let's delete it because we don't need it. in the next branch, we'll update the platform service to actually use this sql server.
 
