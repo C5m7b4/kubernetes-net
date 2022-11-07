@@ -2763,3 +2763,166 @@ namespace CommandsService.Profiles
 ```
 
 that's it for our automapper
+
+## branch 36
+
+still inside of the CommandsService project, let's open up the PlatformsController.cs. let's make these changes to it
+
+```js
+    private readonly ICommandRepo _repo;
+    private readonly IMapper _mapper;
+
+    public PlatformsController(ICommandRepo repo, IMapper mapper)
+    {
+      _repo = repo;
+      _mapper = mapper;
+    }
+```
+
+we are missing a major piece though. we need to setup our dependency injection for our repo. so back in program.cs, we need to add this:
+
+```js
+builder.Services.AddDbContext<AppDbContext>(opt => opt.UseInMemoryDatabase("InMem"));
+builder.Services.AddScoped<ICommandRepo, CommandRepo>();
+```
+
+let make sure that it builds by running dotnet build
+
+now let's go back to the PlatformsController.cs and add another endpoint
+
+```js
+    [HttpGet]
+    public ActionResult<IEnumerable<PlatformReadDto>> GetPlatforms()
+    {
+      Console.WriteLine("--> Getting Platforms from CommandsService");
+
+      var platformItems = _repo.GetAllPlatforms();
+
+      return Ok(_mapper.Map<IEnumerable<PlatformReadDto>>(platformItems));
+    }
+```
+
+let's give this a go, so we'll spin it up by running dotnet run
+
+let's go over to insomnia and create a test for that endpoint
+
+![alt get-all-platforms](images/143-get-all-platforms.png)
+
+looks good. we wouldn't expect to have any data in the inmemory database that we just spun up.
+
+let's create our second controller called CommandsController.cs
+
+```js
+using AutoMapper;
+using CommandsService.Data;
+using CommandsService.Dtos;
+using Microsoft.AspNetCore.Mvc;
+
+namespace CommandsService.Controllers
+{
+  [Route("api/c/platforms/{platformId}/[controller]")]
+  [ApiController]
+  public class CommandsController : ControllerBase
+  {
+    private readonly ICommandRepo _repo;
+    private readonly IMapper _mapper;
+
+    public CommandsController(ICommandRepo repo, IMapper mapper)
+    {
+      _repo = repo;
+      _mapper = mapper;
+    }
+
+    [HttpGet]
+    public ActionResult<IEnumerable<CommandReadDto>> GetCommandsForPlatform(int platformId)
+    {
+      Console.WriteLine($"--> Hit GetCommandsForPlatform: {platformId}");
+
+      if (!_repo.PlatformExists(platformId))
+      {
+        return NotFound();
+      }
+
+      var commands = _repo.GetCommandsForPlatform(platformId);
+
+      return Ok(_mapper.Map<IEnumerable<CommandReadDto>>(commands));
+    }
+  }
+}
+```
+
+we can start with this, but if we try to test it, we aren't going to get anything back, but that's ok for now.
+
+lets do a dotnet run and head back to insomnia
+![alt get-commands-for-platform](images/144-get-commands-for-platform.png)
+
+this looks good for now, we are not expecting anything back from this just yet.
+
+let's add another endpoint
+
+```js
+
+    [HttpGet("{commandId}", Name = "GetCommandForPlatform")]
+    public ActionResult<CommandReadDto> GetCommandForPlatform(int platformId, int commandId)
+    {
+      Console.WriteLine($"--> Hit GetCommandForPlatform: {platformId} / {commandId}");
+
+      if (!_repo.PlatformExists(platformId))
+      {
+        return NotFound();
+      }
+
+      var command = _repo.GetCommand(platformId, commandId);
+
+      if (command == null)
+      {
+        return NotFound();
+      }
+
+      return Ok(_mapper.Map<CommandReadDto>(command));
+    }
+```
+
+we can spin it up and make sure that the endpoint is working
+so, do a dotnet run
+
+we still get a not found
+
+![alt not-found](images/145-not-found.png)
+
+but if we check out log, we can see the results there
+
+![alt arguments](images/146-arguments.png)
+
+and now for our final route
+
+```js
+    [HttpPost]
+    public ActionResult<CommandReadDto> CreateCommandForPlatform(int platformId, CommandCreateDto commandDto)
+    {
+      Console.WriteLine($"--> Hit CreateCommandForPlatform: {platformId}");
+
+      if (!_repo.PlatformExists(platformId))
+      {
+        return NotFound();
+      }
+
+      var command = _mapper.Map<Command>(commandDto);
+
+      _repo.CreateCommand(platformId, command);
+      _repo.SaveChanges();
+
+      var commandReadDto = _mapper.Map<CommandReadDto>(command);
+
+      return CreatedAtRoute(nameof(GetCommandForPlatform), new { platformId = platformId, commandId = commandReadDto.Id }, commandReadDto);
+    }
+```
+
+spin up a dotnet run and create this in insomnia
+
+![alt post](images/147-post.png)
+
+and also make sure that we can see our log because we are just going to get a 404 not found
+
+![alt hit-create-command](images/148-hit-create-command.png)
+
