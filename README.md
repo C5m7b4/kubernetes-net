@@ -1699,3 +1699,48 @@ we can probably kill the two dead ones while we are at it
 
 but not it's time to actually test these puppies out.
 
+## branch 23
+
+let's test all this out with insomnia
+
+all this is going to happen in our K8s folder that we created in insomnia, so let's just make sure that the Get all Platforms is still working
+
+![alt get-all-platforms](images/097-get-all-platforms.png)
+
+that stil looks good
+
+![alt create-platform](images/098-create-platform.png)
+
+looks good from the outside, but let's check the logs in docker desktop
+
+![alt command-service](images/099-command-service.png)
+
+notice that last line --> Ibound Post # command service
+
+that's what we want to see. now in our platform service:
+
+![alt platform-service](images/100-platform-service.png)
+
+once again, notice the last line. That is what we want to see. If for some reason, we are getting some crazy error about certificates, we can use this line on both projects:
+
+```js
+dotnet dev-certs https --trust
+```
+
+now, just to double check, run the Get all Platforms again and we should see our new platform:
+
+![alt get-all-platforms](images/101-get-all-platforms.png)
+
+!!!!!!!!!!!!!!!!! this is definately a start
+
+as a side note, you may notice the redirection errors. that's becuase we are not using https. this error is coming from this line of code in both our platform and commands services:
+
+if you look in the Program.cs file, you will find this line
+
+```js
+app.UseHttpsRedirection();
+```
+
+we could comment this out, but then we would have to rebuild and re-push to docker hub, so we'll leave in the warnings for now.
+
+if you've made it this far, congrats, but there is a ton of more cool shit that we need to do
