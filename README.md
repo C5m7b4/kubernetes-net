@@ -3183,4 +3183,56 @@ now we just need to register our dependency injection
 builder.Services.AddSingleton<IMessageBusClient, MessageBusClient>();
 ```
 
+after you commit, you may have some nasty errors, so use ctrl-shift-p and type reload to fix things up.
+
+now let's go into the PlatformsController and setup our Dependency Injection
+
+```js
+    private readonly IMapper _mapper;
+    private readonly ICommandDataClient _commandDataClient;
+    private readonly IMessageBusClient _messageBusClient;
+    private readonly IPlatformRepo _repo;
+
+    public PlatformsController(IPlatformRepo repo, IMapper mapper, ICommandDataClient commandDataClient, IMessageBusClient messageBusClient)
+    {
+      _repo = repo;
+      _mapper = mapper;
+      _commandDataClient = commandDataClient;
+      _messageBusClient = messageBusClient;
+    }
+```
+
+and then in our post, we'll add this code
+
+```js
+      try
+      {
+        var platforPublishedDto = _mapper.Map<PlatformPublishedDto>(platformReadDto);
+        platforPublishedDto.Event = "Platform_Published";
+        _messageBusClient.PublishNewPlatform(platforPublishedDto);
+      }
+      catch (System.Exception ex)
+      {
+        Console.WriteLine($"--> Could not send asynchronously: {ex.Message}");
+      }
+```
+
+now let's fire up our PlatformService with a dotnet run
+
+now let's open up the CommandService and do a dotnet run on it
+
+then we'll go to  insomnia and on our local platform service, make sure we can still get all platforms and then let's create a platform
+
+then in our command service, we should still see this
+
+![alt command-service](images/155-command-service.png)
+
+and i our PlatformService we should see our new logs
+
+![alt platform-service](images/156-platform-service.png)
+
+now if we blast the Create command, we can see in rabbitmq, our activity
+
+![alt rabbit](images/157-rabbit.png)
+
 
