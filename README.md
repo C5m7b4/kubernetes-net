@@ -1,5 +1,9 @@
 # kubernetes for .net cor apis
 
+firstly I want to give a shoutout to a guy named Les Jackson. He put a video up on youtube that is an 11 hour course on microservices. If you have not watched, you can find it [here](https://www.youtube.com/watch?v=DgVjEo3OGBI)
+
+I really wanted to drive some of these concepts home for myself and possible others in the future, so I documented my entire 11 hour journey into this repo. Again, this not my work, but an inspiration, and something that can refer back to in the future when implementing microservices.
+
 firstly we are going to create a blank folder in our dev directory
 
 then we are going to initialize it
@@ -30,7 +34,7 @@ git checkout -b branch1
 
 ## branch 1
 
-This code comes from this awesome [youtube video](https://www.youtube.com/watch?v=DgVjEo3OGBI)
+
 
 Here we are going to take a look at slides 01 through 03. I am not a powerpoint guy, but I give my best shot:
 
