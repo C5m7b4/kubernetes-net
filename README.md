@@ -2926,3 +2926,112 @@ and also make sure that we can see our log because we are just going to get a 40
 
 ![alt hit-create-command](images/148-hit-create-command.png)
 
+## branch 37
+
+now we are going to look into setting up rabbitmq as our messaging but. I need to do more research on this because there are features that I would like to learn. one thing to lookup also is amqp (advanced-messaging-queuing-protocal)
+
+there are 4 types of exchange
+
+- Direct
+- Fanout
+- Topic
+- Header
+
+so, let's go to our K8S project and create a new file called rabbitmq-depl.yaml
+
+```js
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+        - name: rabbitmq
+          image: rabbitmq:3-management
+          ports:
+            - containerPort: 15672
+              name: rbmq-mgmt-port
+            - containerPort: 5672
+              name: rbmq-msg-port
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-clusterip-srv
+spec:
+  type: ClusterIP
+  selector:
+    app: rabbitmq
+  ports:
+  - name: rbmq-mgmt-port
+    protocol: TCP
+    port: 15672
+    targetPort: 15672
+  - name: rbmq-msg-port
+    protocol: TCP
+    port: 5672
+    targetPort: 5672
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-loadbalancer
+spec:
+  type: LoadBalancer
+  selector:
+    app: rabbitmq
+  ports:
+  - name: rbmq-mgmt-port
+    protocol: TCP
+    port: 15672
+    targetPort: 15672
+  - name: rbmq-msg-port
+    protocol: TCP
+    port: 5672
+    targetPort: 5672
+```
+
+now lets run the deployment
+
+```js
+kubectl apply -f rabbitmq-depl.yaml
+```
+
+![alt rabbit](images/149-rabbit-mq.png)
+
+now let's get our deployments
+
+```js
+kubectl get deployments
+```
+
+![alt deployments](images/150-deployments.png)
+
+it might take some time to start. notice in my screenshot, it is not started yet, so let's check out pods
+
+```js
+kubectl get pods
+```
+
+![alt deployments](images/151-deployments.png)
+
+looking good now.
+
+![alt services](images/152-services.png)
+
+now let's open up a browser and go go localhost:15672
+
+![alt rabbit](images/153-rabbit.png)
+
+you can login with guest/guest
+
+![alt dashboard](images/154-dashboard.png)
