@@ -3035,3 +3035,152 @@ now let's open up a browser and go go localhost:15672
 you can login with guest/guest
 
 ![alt dashboard](images/154-dashboard.png)
+
+## branch 38
+
+now let's go into our platform service
+
+we need to add a dependency for RabbitMQ
+
+```js
+dotnet add package RabbitMQ.Client
+```
+
+now in our appsettings.Development.json we need to add our config
+
+```js
+  "RabbitMQHost": "localhost",
+  "RabbitMQPort": "5672"
+```
+
+and in our appsettings.json, we need to add that config
+
+```js
+  "RabbitMQHost": "rabbitmq-clusterip-srv",
+  "RabbitMQPort": "5672"
+```
+
+now let's create a dto, so in the Dtos folder create a file named PlatformPublishedDto.cs
+
+```js
+namespace PlatformService.Dtos
+{
+  public class PlatformPublishedDto
+  {
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Event { get; set; }
+  }
+}
+```
+
+now we need to create another mapping, so let's go into the Profiles folder and update that file:
+
+```js
+CreateMap<PlatformReadDto, PlatformPublishedDto>();
+```
+
+now let's create a folder in the root of our project and name it AsyncDataServices and create a file in there called IMessageBusClient
+
+```js
+using PlatformService.Dtos;
+
+namespace PlatformService.AsyncDataService
+{
+  public interface IMessageBusClient
+  {
+    void PublishNewPlatform(PlatformPublishedDto platformPublishedDto);
+  }
+}
+```
+
+now we are going to implement this interface so create a file calledMessageBusClient.cs. this is going to be kind of a lengthy file
+
+```js
+using System.Text;
+using System.Text.Json;
+using PlatformService.Dtos;
+using RabbitMQ.Client;
+
+namespace PlatformService.AsyncDataService
+{
+  public class MessageBusClient : IMessageBusClient
+  {
+    private readonly IConfiguration _config;
+    private readonly IConnection _connection;
+    private readonly IModel _channel;
+
+    public MessageBusClient(IConfiguration config)
+    {
+      _config = config;
+      var factory = new ConnectionFactory() { HostName = _config["RabbitMQHost"], Port = int.Parse(_config["RabbitMQPort"]) };
+      try
+      {
+        _connection = factory.CreateConnection();
+        _channel = _connection.CreateModel();
+
+        _channel.ExchangeDeclare(exchange: "trigger", type: ExchangeType.Fanout);
+
+        _connection.ConnectionShutdown += RabbitMQ_ConnectionShutdown;
+
+        Console.WriteLine("--> Connected to Message Bus");
+      }
+      catch (System.Exception ex)
+      {
+        Console.WriteLine($"--> Could not connect to the Message Bus: {ex.Message}");
+      }
+    }
+
+    private void RabbitMQ_ConnectionShutdown(object sender, ShutdownEventArgs e)
+    {
+      Console.WriteLine("--> Message Bus has disconnected");
+    }
+
+    private void SendMessage(string message)
+    {
+      var body = Encoding.UTF8.GetBytes(message);
+
+      _channel.BasicPublish(exchange: "trigger", routingKey: "", basicProperties: null, body: body);
+
+      Console.WriteLine($"--> We have sent {message}");
+    }
+
+
+    public void PublishNewPlatform(PlatformPublishedDto platformPublishedDto)
+    {
+      var message = JsonSerializer.Serialize(platformPublishedDto);
+
+      if (_connection.IsOpen)
+      {
+        Console.WriteLine("--> Rabbit MQ Connection open, sending message...");
+        SendMessage(message);
+      }
+      else
+      {
+        Console.WriteLine("--. Rabbit MQ connection is closed, not sendind");
+      }
+    }
+
+    public void Dispose()
+    {
+      Console.WriteLine("Message Bus Disposed");
+      if (_channel.IsOpen)
+      {
+        _channel.Close();
+        _connection.Close();
+      }
+    }
+  }
+}
+
+```
+
+lets do a dotnet build just to make sure we haven't broken anything
+
+now we just need to register our dependency injection
+
+```js
+builder.Services.AddSingleton<IMessageBusClient, MessageBusClient>();
+```
+
+
