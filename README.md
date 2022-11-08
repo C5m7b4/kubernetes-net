@@ -4024,3 +4024,99 @@ now in startup, we just need to add this one last line
 ```js
 PrepDb.PrepPopulation(app);
 ```
+
+## branch 48
+
+we are back in the platform service again and do a dotnet run
+
+now lets just check insomnia to make sure there is some data in there.
+
+now we can go over to the comands servic and run dotnet run and when it starts up, it should use grpc to pull data from the PlatformService
+
+![alt seeding](images/176-seeding.png)
+
+![alt get-all-platforms](images/177-get-all-platforms.png)
+
+head back over to the platformservice
+
+```js
+docker build -t c5m7b4/platformservice .
+
+```
+
+```js
+docker push c5m7b4/platformservice
+```
+
+now back over to the CommandService
+
+```js
+docker build -t c5m7b4/commandservice .
+```
+
+```js
+docker push c5m7b4/commandservice
+```
+
+let go back over to the PlatformService 
+
+```js
+kubectl get deployments
+```
+
+```js
+kubectl rollout restart deployment platforms-depl
+```
+
+```js
+kubectl get pods
+```
+
+make sure all pods are running and check the logs after it starts up
+probably wouldnt hurt to check insomnia also to make sure we can get all platforms
+
+```js
+kubectl rollout restart deployment commands-depl
+```
+
+check the pods
+check the logs
+
+this one actually fails, so i need to do some more research
+
+![alt crash](images/178-crash.png)
+
+actually if we go back into the appsettings.json for the CommandServer,
+we can fix the address:
+
+```js
+"GrpcPlatform": "http://platforms-clusterip-srv:666"
+```
+
+still inside of the CommandService
+
+```js
+docker build -t c5m7b4/commandservice .
+```
+
+```js
+docker push c5m7b4/commandservice
+```
+
+check out deployments and restart the commandservice
+
+```js
+kubectl rollout restart deployment commands-depl
+```
+
+![alt success](images/179-success.png)
+
+congrats for making it this far.
+
+more food for thought:
+
+- https/tls
+- Event Process
+- Service Discovery
+- Bearer Authentication
+- refactor endpoint return types
