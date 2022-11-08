@@ -3582,3 +3582,93 @@ and now we should be able to run the Get all Commands for Platform
 ![alt all-commands](images/165-all-commands.png)
 
 congrats, this was all a big step. next up, let's rebuild everthing and re-push our images to docker hub and refresh kubernetes and do some more testing
+
+## branch 44
+
+let's go back over to our platform service, shut everthing down and do a fresh docker build
+
+```js
+docker build -t c5m7b4/platformservice .
+```
+
+and now we will push it back up to docker hub
+
+```js
+docker push c5m7b4/platformservice
+```
+
+now we need to go over to our CommandService and do a build there as well
+
+```js
+docker build -t c5m7b4/commandservice .
+```
+
+and then push that up to docker hub
+
+```js
+docker push c5m7b4/commandservice
+```
+
+check our work on docker hub of course
+
+next up, let's double check our deployments
+
+```js
+kubectl get deployments
+```
+
+![alt deployments](images/166-deployments.png)
+
+now lets restart the platform-depl
+
+```js
+kubectl rollout restart deployment platforms-depl
+```
+
+make sure the pods are running 
+
+```js
+kubectl get pods
+```
+
+now we'll go over to insomnia and using our K8s Platform service let's create a platform and see what we get
+
+![alt create-platform](images/167-create-platform.png)
+
+now if we do a get all platforms
+
+![alt platforms](images/168-platforms.png)
+
+all is looking good. let check the logs
+
+![alt logs](images/169-logs.png)
+
+now let's restart the CommandService
+
+```js
+kubectl rollout restart deployment commands-depl
+```
+
+make sure the pods are running 
+
+```js
+kubectl get pods
+```
+
+now we'll create another platform
+
+![alt create-platform](images/170-create-platform.png)
+
+and take a look at the logs
+
+![alt platform-added](images/171-platform-added.png)
+
+now lets create a CommandService folder in our K8s insomnia folder and create the Get all Platforms request
+
+![alt get-all-platforms](images/172-get-all-platforms.png)
+
+![alt create-command](images/173-create-command.png)
+
+![alt get-all-commands](images/174-get-all-commands.png)
+
+in the next section we will look at grpc and really syncing our commands
