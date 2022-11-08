@@ -3522,3 +3522,63 @@ builder.Services.AddHostedService<MessageBusSubscriber>();
 ```
 
 now, we are ready to test
+
+## branch 43
+
+let's open up the platform service and do a dotnet build and dotnet run
+
+then go back to the command service and do a dotnet build and a dotnet run
+
+this is the important part
+
+![alt listening](images/158-listening.png)
+
+now over to insomnia and we are using the local versions for testing. make sure first that the Get all Platforms is still working, and then we are going to Create a platform and see what happens.
+
+in our command service, we should see this:
+
+![alt command-received](images/159-event-received.png)
+
+and in our platform service, we should see this
+
+![alt sent](images/160-sent.png)
+
+we are missing something though, in the command service, open uup the EventProcessor class and let's first add a console message on lin 66 after we save the 
+
+then in our ToDo section that we left around line 25,
+we need to add this:
+
+```js
+      switch (eventType)
+      {
+        case EventType.PlatformPublished:
+          AddPlatform(message);
+          break;
+        default:
+          break;
+      }
+```
+
+now we can restart the command service and test Creating a platform again with insomnia
+
+now in our command service, we'll get some better logging:
+
+![alt platform-added](images/161-platform-added.png)
+
+now if we go to the CommandService in insomnia, we should be able to run the Get all platforms there and we should see the platform we added
+
+![alt new-platform](images/162-new-platform.png)
+
+now let's try the Create Command for Platform. note the id that was returned
+
+![alt new-command](images/163-new-command.png)
+
+actually, i messed that up. I need to the use id that that is in the previous screenshot
+
+![alt new-command](images/164-new-command.png)
+
+and now we should be able to run the Get all Commands for Platform
+
+![alt all-commands](images/165-all-commands.png)
+
+congrats, this was all a big step. next up, let's rebuild everthing and re-push our images to docker hub and refresh kubernetes and do some more testing
