@@ -3235,4 +3235,76 @@ now if we blast the Create command, we can see in rabbitmq, our activity
 
 ![alt rabbit](images/157-rabbit.png)
 
+## branch 40
 
+now let's open up teh ComandsService and work on that for a little while.
+
+first we need to add the RabbitMQ.Client dependency
+
+```js
+dotnet add package RabbitMQ.Client
+```
+
+make sure the check the CommandsService.csproj to make sure it got loaded.
+
+now in our appsettings.Development.json, let's add our RabbitMQ config
+
+```js
+  "RabbitMQHost": "localhost",
+  "RabbitMQPort": "5672"
+```
+
+then i nour appsettings.json, we need to add the config there as well
+
+```js
+  "RabbitMQHost": "rabbitmq-clusterip-srv",
+  "RabbitMQPort": "5672"
+```
+
+now we are going to create some Dtos, so create a file in the Dto folder called PlatformPublishedDto.cs
+
+```js
+namespace CommandsService.Dtos
+{
+  public class PlatformPublishedDto
+  {
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Event { get; set; }
+  }
+}
+```
+
+now create another dto called GenericEventDto.cs
+
+```js
+namespace CommandsService.Dtos
+{
+  public class GenericEventDto
+  {
+    public string Event { get; set; }
+  }
+}
+```
+
+now we need to change our profile code to AutoMapper
+
+```js
+      CreateMap<PlatformPublishedDto, Platform>()
+        .ForMember(dest => dest.ExternalId, opt => opt.MapFrom(src => src.Id));
+```
+
+now i our ICommandRepo.cs file, add this little snippet
+
+```js
+bool ExternalPlatformExists(int externalPlatformId);
+```
+
+and then we need to implement this in the CommandRepo.cs file
+
+```js
+    public bool ExternalPlatformExists(int externalPlatformId)
+    {
+      return _context.Platforms.Any(p => p.ExternalId == externalPlatformId);
+    } 
+```
