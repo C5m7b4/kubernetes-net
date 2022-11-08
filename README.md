@@ -3849,3 +3849,178 @@ app.MapGet("/protos/platforms.proto", async context =>
 now let's do a dotnet build
 
 now let's try a dotnet run
+
+we skipped branch46
+
+## branch 47
+
+now we move on to the Commandservice
+
+in the appsettings.Development.json, add this config
+
+```js
+"GrpcPlatform": "https://localhost:5001"
+```
+
+and then in the production settings
+
+```js
+"GrpcPlatform": "http://platforms-clust:666"
+```
+
+let's make a folder in the root now called Protos and copy the file from the PlatformService project into this one
+
+we are also going to copy the ItemGroup additions from the PlatformService found in teh csproj file with one change - Client mode
+
+```js
+  <ItemGroup>
+    <Protobuf Include="Protos\platforms.proto" GrpcServices="Client" />
+  </ItemGroup>
+```
+
+lets do a dotnet build
+
+in the root, create a folder called SyncDataService and then another folder called Grpc and then inside of that a file called IPlatformDataClient.cs
+
+```js
+using CommandsService.Models;
+
+namespace CommandsService.SyncDataServices.Grpc
+{
+  public interface IPlatformDataClient
+  {
+    IEnumerable<Platform> ReturnAllPlatforms();
+  }
+}
+```
+
+then create another file in the Grpc folder called PlatformDataClient.cs
+
+```js
+using AutoMapper;
+using CommandsService.Models;
+
+namespace CommandsService.SyncDataServices.Grpc
+{
+  public class PlatformDataClient : IPlatformDataClient
+  {
+    private readonly IConfiguration _config;
+    private readonly IMapper _mapper;
+
+    public PlatformDataClient(IConfiguration config, IMapper mapper)
+    {
+      _config = config;
+      _mapper = mapper;
+    }
+    public IEnumerable<Platform> ReturnAllPlatforms()
+    {
+      throw new NotImplementedException();
+    }
+  }
+}
+```
+
+at this point, let's set up the automapper so go into Profiles
+
+```js
+      CreateMap<GrpcPlatformModel, Platform>()
+        .ForMember(dest => dest.ExternalId, opt => opt.MapFrom(src => src.PlatformId))
+        .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+        .ForMember(dest => dest.Commands, opt => opt.Ignore());
+```
+
+now ack to our PlatformDataClient.cs file
+
+```js
+using AutoMapper;
+using CommandsService.Models;
+using Grpc.Net.Client;
+using PlatformService;
+
+namespace CommandsService.SyncDataServices.Grpc
+{
+  public class PlatformDataClient : IPlatformDataClient
+  {
+    private readonly IConfiguration _config;
+    private readonly IMapper _mapper;
+
+    public PlatformDataClient(IConfiguration config, IMapper mapper)
+    {
+      _config = config;
+      _mapper = mapper;
+    }
+    public IEnumerable<Platform> ReturnAllPlatforms()
+    {
+      Console.WriteLine($"--> Calling Grpc Service: {_config["GrpcPlatform"]}");
+      var channel = GrpcChannel.ForAddress(_config["GrpcPlatform"]);
+      var client = new GrpcPlatform.GrpcPlatformClient(channel);
+      var request = new GetAllRequests();
+
+      try
+      {
+        var reply = client.GetAllPlatforms(request);
+        return _mapper.Map<IEnumerable<Platform>>(reply.Platform);
+      }
+      catch (System.Exception ex)
+      {
+        Console.WriteLine($"--> Could not call Grpc Server: {ex.Message}");
+        return null;
+      }
+    }
+  }
+}
+```
+
+now in our Program.cs file, we need to add this
+
+```js
+builder.Services.AddScoped<IPlatformDataClient, PlatformDataClient>();
+```
+
+dotnet build
+dotnet run
+
+now in the Data folder, create a file called PrepDb.cs
+
+```js
+using CommandsService.Models;
+using CommandsService.SyncDataServices.Grpc;
+
+namespace CommandsService.Data
+{
+  public static class PrepDb
+  {
+    public static void PrepPopulation(IApplicationBuilder builder)
+    {
+      using (var serviceScope = builder.ApplicationServices.CreateScope())
+      {
+        var grpcClient = serviceScope.ServiceProvider.GetService<IPlatformDataClient>();
+
+        var platforms = grpcClient.ReturnAllPlatforms();
+
+        SeedData(serviceScope.ServiceProvider.GetService<ICommandRepo>(), platforms);
+      }
+    }
+
+    private static void SeedData(ICommandRepo repo, IEnumerable<Platform> platforms)
+    {
+      Console.WriteLine("Seeding new platforms");
+
+      foreach (var plat in platforms)
+      {
+        if (!repo.ExternalPlatformExists(plat.ExternalId))
+        {
+          repo.CreatePlatform(plat);
+        }
+        repo.SaveChanges();
+      }
+    }
+  }
+}
+```
+
+now in startup, we just need to add this one last line
+
+```js
+PrepDb.PrepPopulation(app);
+```
